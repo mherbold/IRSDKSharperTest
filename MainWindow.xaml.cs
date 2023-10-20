@@ -9,19 +9,19 @@ namespace IRSDKSharperTest
 {
 	public partial class MainWindow : Window
 	{
-		// private readonly DataRecorder dataRecorder;
+		private readonly DataRecorder dataRecorder;
 		private readonly IRSDKSharper irsdkSharper;
 
 		public MainWindow()
 		{
 			InitializeComponent();
-			/*
+
 			dataRecorder = new DataRecorder();
 
 			dataRecorder.OnException += OnException;
 
 			dataRecorder.Start();
-			*/
+
 			irsdkSharper = new IRSDKSharper();
 
 			irsdkSharper.OnException += OnException;
@@ -40,13 +40,13 @@ namespace IRSDKSharperTest
 
 		private void OnConnected()
 		{
-			// dataRecorder.SetIRacingSdkData( irsdkSharper.Data );
+			dataRecorder.SetIRacingSdkData( irsdkSharper.Data );
 			dataView.SetIRacingSdkData( irsdkSharper.Data );
 		}
 
 		private void OnDisconnected()
 		{
-			// dataRecorder.SetIRacingSdkData( null );
+			dataRecorder.SetIRacingSdkData( null );
 			dataView.SetIRacingSdkData( null );
 
 			Dispatcher.BeginInvoke( () =>
@@ -59,12 +59,12 @@ namespace IRSDKSharperTest
 
 		private void OnSessionInfo()
 		{
-			// dataRecorder.OnSessionInfo();
+			dataRecorder.OnSessionInfo();
 		}
 
 		private void OnTelemetryData()
 		{
-			// dataRecorder.OnTelemetryData();
+			dataRecorder.OnTelemetryData();
 
 			Dispatcher.BeginInvoke( () =>
 			{
@@ -77,7 +77,7 @@ namespace IRSDKSharperTest
 		private void Window_Closing( object sender, System.ComponentModel.CancelEventArgs e )
 		{
 			irsdkSharper.Stop();
-			// dataRecorder.Stop();
+			dataRecorder.Stop();
 		}
 
 		private void Window_MouseWheel( object sender, System.Windows.Input.MouseWheelEventArgs e )

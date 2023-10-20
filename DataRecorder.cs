@@ -14,8 +14,8 @@ namespace IRSDKSharperTest
 {
 	internal class DataRecorder
 	{
-		private const string SessionInfoFilePath = "C:\\Users\\marvi\\Desktop\\SessionInfo.txt";
-		private const string TelemetryDataFilePath = "C:\\Users\\marvi\\Desktop\\TelemetryData.txt";
+		private const string SessionInfoFilePath = "SessionInfo.txt";
+		private const string TelemetryDataFilePath = "TelemetryData.txt";
 
 		private const int BufferSize = 1 * 1024 * 1024;
 
@@ -53,6 +53,7 @@ namespace IRSDKSharperTest
 			{ "ManifoldPress", 1 },
 			{ "OilPress", 1 },
 			{ "OilTemp", 15 },
+			{ "OilLevel", 1 },
 			{ "PitOptRepairLeft", 1 },
 			{ "PitRepairLeft", 1 },
 			{ "RelativeHumidity", 15 },
@@ -61,6 +62,7 @@ namespace IRSDKSharperTest
 			{ "TrackTempCrew", 1 },
 			{ "Voltage", 1 },
 			{ "WaterTemp", 15 },
+			{ "WaterLevel", 1 },
 			{ "WindDir", 15 },
 			{ "WindVel", 15 },
 		};
@@ -104,11 +106,50 @@ namespace IRSDKSharperTest
 		// Stuff that I am not sure about so leaving them in our telemetry recording -
 		//
 		// CarIdxFastRepairsUsed
+		// CarIdxP2P_Count
+		// CarIdxP2P_Status
+		// dcBrakeBias
+		// dcDashPage
 		// DCDriversSoFar
 		// DCLapStatus
+		// dcStarter
+		// dpFastRepair
+		// dpFuelAddKg
+		// dpFuelFill
+		// dpLFTireColdPress
+		// dpLRTireColdPress
+		// dpLTireChange
+		// dpRFTireColdPress
+		// dpRRTireColdPress
+		// dpRTireChange
+		// dpWeightJackerLeft
+		// dpWeightJackerRight
+		// dpWindshieldTearoff
 		// DriverMarker
+		// EngineWarnings
+		// LFcoldPressure
+		// LFtempCL
+		// LFtempCM
+		// LFtempCR
+		// LFwearL
+		// LFwearM
+		// LFwearR
+		// LRcoldPressure
+		// LRtempCL
+		// LRtempCM
+		// LRtempCR
+		// LRwearL
+		// LRwearM
+		// LRwearR
 		// ManualBoost
 		// ManualNoBoost
+		// PitSvFlags
+		// PitSvFuel
+		// PitSvLFP
+		// PitSvLRP
+		// PitSvRFP
+		// PitSvRRP
+		// PitSvTireCompound
 		// PlayerCarDryTireSetLimit
 		// PlayerCarInPitStall
 		// PlayerCarPitSvStatus
@@ -116,6 +157,20 @@ namespace IRSDKSharperTest
 		// PlayerCarTowTime
 		// PlayerCarWeightPenalty
 		// PushToPass
+		// RFcoldPressure
+		// RFtempCL
+		// RFtempCM
+		// RFtempCR
+		// RFwearL
+		// RFwearM
+		// RFwearR
+		// RRcoldPressure
+		// RRtempCL
+		// RRtempCM
+		// RRtempCR
+		// RRwearL
+		// RRwearM
+		// RRwearR
 		// SessionJokerLapsRemain
 		// SessionOnJokerLap
 		// Skies
@@ -123,6 +178,7 @@ namespace IRSDKSharperTest
 
 		private static readonly HashSet<string> ignoredTelemetry = new() {
 			"Brake",							// replayed
+			"BrakeAbsActive",					// unknown if replayed but dont need this
 			"BrakeRaw",							// not replayed but chatty
 			"CamCameraNumber",					// live
 			"CamCameraState",					// live
@@ -140,7 +196,6 @@ namespace IRSDKSharperTest
 			"CarIdxLapDistPct",					// replayed
 			"CarIdxLastLapTime",				// replayed
 			"CarIdxOnPitRoad",					// replayed
-			"CarIdxP2P_Count",
 			"CarIdxPosition",					// replayed
 			"CarIdxQualTireCompound",			// not replayed but dont need this
 			"CarIdxQualTireCompoundLocked",		// not replayed but dont need this
@@ -159,14 +214,20 @@ namespace IRSDKSharperTest
 			"CpuUsageBG",						// live
 			"CpuUsageBG",						// live
 			"CpuUsageFG",						// live
+			"CRshockDefl",						// not replayed but chatty
+			"CRshockDefl_ST",					// not replayed but chatty
+			"CRshockVel",						// not replayed but chatty
+			"CRshockVel_ST",					// not replayed but chatty
 			"DisplayUnits",						// live
 			"Engine0_RPM",						// is not replayed but whats the difference with RPM?
 			"EnterExitReset",					// live
 			"FrameRate",						// live
 			"Gear",								// duplicate of CarIdxGear
 			"GpuUsage",							// live
+			"HandbrakeRaw",						// not replayed but chatty
 			"IsDiskLoggingActive",				// live
 			"IsDiskLoggingEnabled",				// live
+			"IsGarageVisible",					// live
 			"IsInGarage",						// live
 			"IsOnTrack",						// live
 			"IsOnTrackCar",						// live
@@ -198,23 +259,25 @@ namespace IRSDKSharperTest
 			"LapLasNLapSeq",					// not replayed but dont need this
 			"LapLastLapTime",					// duplicate of CarIdxLastLapTime
 			"LapLastNLapTime",					// not replayed but dont need this
-			"LatAccel",
-			"LatAccel_ST",
-			"LFshockDefl",
-			"LFshockDefl_ST",					// note - only 60 hz during replays
-			"LFshockVel",
-			"LFshockVel_ST",					// note - only 60 hz during replays
+			"LatAccel",							// replayed
+			"LatAccel_ST",						// replayed but at 60hz
+			"LFbrakeLinePress",					// unknown if replayed but dont need this
+			"LFshockDefl",						// not replayed but chatty
+			"LFshockDefl_ST",					// not replayed but chatty
+			"LFshockVel",						// not replayed but chatty
+			"LFshockVel_ST",					// not replayed but chatty
 			"LFSHshockDefl",
 			"LFSHshockDefl_ST",
 			"LFSHshockVel",
 			"LFSHshockVel_ST",
 			"LoadNumTextures",					// live
-			"LongAccel",
-			"LongAccel_ST",
-			"LRshockDefl",
-			"LRshockDefl_ST",					// note - only 60 hz during replays
-			"LRshockVel",
-			"LRshockVel_ST",					// note - only 60 hz during replays
+			"LongAccel",						// replayed
+			"LongAccel_ST",						// replayed but at 60hz
+			"LRbrakeLinePress",					// unknown if replayed but dont need this
+			"LRshockDefl",						// not replayed but chatty
+			"LRshockDefl_ST",					// not replayed but chatty
+			"LRshockVel",						// not replayed but chatty
+			"LRshockVel_ST",					// not replayed but chatty
 			"LRSHshockDefl",
 			"LRSHshockDefl_ST",
 			"LRSHshockVel",
@@ -224,8 +287,8 @@ namespace IRSDKSharperTest
 			"OkToReloadTextures",				// live
 			"OnPitRoad",						// duplicate of CarIdxOnPitRoad
 			"Pitch",							// replayed
-			"PitchRate",
-			"PitchRate_ST",
+			"PitchRate",						// replayed
+			"PitchRate_ST",						// replayed but at 60hz
 			"PlayerCarClass",					// duplicate of CarIdxClass
 			"PlayerCarClassPosition",			// duplicate of CarIdxClassPosition
 			"PlayerCarIdx",						// replayed
@@ -239,25 +302,28 @@ namespace IRSDKSharperTest
 			"RadioTransmitCarIdx",				// replayed
 			"ReplayFrameNum",					// live
 			"ReplayFrameNumEnd",				// live
-			"ReplayPlaySpeed",
-			"ReplaySessionNum",
-			"ReplaySessionTime",
-			"RFshockDefl",
-			"RFshockDefl_ST",					// note - only 60 hz during replays
-			"RFshockVel",
-			"RFshockVel_ST",					// note - only 60 hz during replays
+			"ReplayPlaySlowMotion",				// live
+			"ReplayPlaySpeed",					// live
+			"ReplaySessionNum",					// live
+			"ReplaySessionTime",				// live
+			"RFbrakeLinePress",					// unknown if replayed but dont need this
+			"RFshockDefl",						// not replayed but chatty
+			"RFshockDefl_ST",					// not replayed but chatty
+			"RFshockVel",						// not replayed but chatty
+			"RFshockVel_ST",					// not replayed but chatty
 			"RFSHshockDefl",
 			"RFSHshockDefl_ST",
 			"RFSHshockVel",
 			"RFSHshockVel_ST",
 			"Roll",								// replayed
-			"RollRate",
-			"RollRate_ST",
+			"RollRate",							// replayed
+			"RollRate_ST",						// replayed but at 60hz
 			"RPM",								// duplicate of CarIdxRPM
-			"RRshockDefl",
-			"RRshockDefl_ST",					// note - only 60 hz during replays
-			"RRshockVel",
-			"RRshockVel_ST",					// note - only 60 hz during replays
+			"RRbrakeLinePress",					// unknown if replayed but dont need this
+			"RRshockDefl",						// not replayed but chatty
+			"RRshockDefl_ST",					// not replayed but chatty
+			"RRshockVel",						// not replayed but chatty
+			"RRshockVel_ST",					// not replayed but chatty
 			"RRSHshockDefl",
 			"RRSHshockDefl_ST",
 			"RRSHshockVel",
@@ -267,40 +333,51 @@ namespace IRSDKSharperTest
 			"SessionLapsTotal",					// replayed
 			"SessionNum",						// replayed
 			"SessionState",						// replayed
-			"SessionTick",						// replayed and meaningless so don't use this
+			"SessionTick",						// live
 			"SessionTime",						// replayed but note that live = accurate and replay = junk so don't use this
 			"SessionTimeOfDay",					// not replayed but this can be calculated from weekend information
 			"SessionTimeRemain",				// replayed
 			"SessionTimeTotal",					// replayed
 			"SessionUniqueID",					// replayed
-			"ShiftIndicatorPct",
+			"ShiftGrindRpm",					// not replayed but dont need this
+			"ShiftIndicatorPct",				// depreciated, use DriverCarSLBlinkRPM instead
+			"ShiftPowerPct",					// not replayed but dont need this
 			"Speed",							// replayed
 			"SteeringWheelAngle",				// duplicate of CarIdxSteer
 			"SteeringWheelAngleMax",			// live
-			"SteeringWheelPctTorque",
-			"SteeringWheelPctTorqueSign",
-			"SteeringWheelPctTorqueSignStops",	//
-			"SteeringWheelTorque",
-			"SteeringWheelTorque_ST",
+			"SteeringWheelLimiter",				// not replayed but chatty
+			"SteeringWheelMaxForceNm",			// not replayed but chatty
+			"SteeringWheelPeakForceNm",			// not replayed but chatty
+			"SteeringWheelPctDamper",			// not replayed but chatty
+			"SteeringWheelPctIntensity",		// not replayed but chatty
+			"SteeringWheelPctSmoothing",		// not replayed but chatty
+			"SteeringWheelPctTorque",			// not replayed but chatty
+			"SteeringWheelPctTorqueSign",		// not replayed but chatty
+			"SteeringWheelPctTorqueSignStops",	// not replayed but chatty
+			"SteeringWheelTorque",				// not replayed but dont need this
+			"SteeringWheelTorque_ST",			// not replayed but dont need this
+			"SteeringWheelUseLinear",			// not replayed but dont need this
 			"Throttle",							// replayed
 			"ThrottleRaw",						// not replayed but chatty
+			"TireLF_RumblePitch",				// not replayed but dont need this
+			"TireLR_RumblePitch",				// not replayed but dont need this
+			"TireRF_RumblePitch",				// not replayed but dont need this
+			"TireRR_RumblePitch",				// not replayed but dont need this
 			"TrackTemp",						// depreciated, use TrackTempCrew instead
-			"VelocityX",
-			"VelocityX_ST",
-			"VelocityY",
-			"VelocityY_ST",
-			"VelocityZ",
-			"VelocityZ_ST",
-			"VertAccel",
-			"VertAccel_ST",
+			"VelocityX",						// replayed
+			"VelocityX_ST",						// replayed but at 60hz
+			"VelocityY",						// replayed
+			"VelocityY_ST",						// replayed but at 60hz
+			"VelocityZ",						// replayed
+			"VelocityZ_ST",						// replayed but at 60hz
+			"VertAccel",						// replayed
+			"VertAccel_ST",						// replayed but at 60hz
 			"VidCapActive",						// live
 			"VidCapEnabled",					// live
 			"Yaw",								// replayed
 			"YawNorth",							// replayed
-			"YawRate",
-			"YawRate_ST",
-
-			// left off at ShiftPowerPct
+			"YawRate",							// replayed
+			"YawRate_ST",						// replayed but at 60hz
 		};
 
 		public void Start()
