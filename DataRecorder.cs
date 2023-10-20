@@ -39,45 +39,252 @@ namespace IRSDKSharperTest
 
 		private readonly IRacingSdkSessionInfo retainedSessionInfo = new();
 
-		private static readonly HashSet<string> ignoredTelemetryNames = new() {
-			"Brake",
-			"CamCameraNumber",
-			"CarIdxEstTime",
-			"CarIdxLapDistPct",
-			"CarIdxRPM",
-			"CarIdxSteer",
-			"CarIdxTrackSurfaceMaterial",
-			"CpuUsageBG",
-			"CpuUsageBG",
-			"CpuUsageFG",
-			"FrameRate",
-			"GpuUsage",
-			"LapDist",
-			"LapDistPct",
+		private static readonly Dictionary<string, int> throttledTelemetry = new()
+		{
+			{ "AirDensity", 15 },
+			{ "AirPressure", 15 },
+			{ "AirTemp", 15 },
+			{ "CarIdxRPM", 1 },
+			{ "FogLevel", 15 },
+			{ "FuelLevel", 1 },
+			{ "FuelLevelPct", 1 },
+			{ "FuelPress", 1 },
+			{ "FuelUsePerHour", 1 },
+			{ "ManifoldPress", 1 },
+			{ "OilPress", 1 },
+			{ "OilTemp", 15 },
+			{ "PitOptRepairLeft", 1 },
+			{ "PitRepairLeft", 1 },
+			{ "RelativeHumidity", 15 },
+			{ "SolarAltitude", 15 },
+			{ "SolarAzimuth", 15 },
+			{ "TrackTempCrew", 1 },
+			{ "Voltage", 1 },
+			{ "WaterTemp", 15 },
+			{ "WindDir", 15 },
+			{ "WindVel", 15 },
+		};
+
+		// Stuff not replayed so we need them in our telemetry recording -
+		//
+		// CarIdxPaceFlags
+		// CarIdxPaceLine
+		// CarIdxPaceRow
+		// CarIdxSessionFlags
+		// CarLeftRight
+		// FastRepairAvailable
+		// FastRepairUsed
+		// FrontTireSetsAvailable
+		// FrontTireSetsUsed
+		// LeftTireSetsAvailable
+		// LeftTireSetsUsed
+		// LFTiresAvailable
+		// LFTiresUsed
+		// LRTiresAvailable
+		// LRTiresUsed
+		// PaceMode
+		// PitsOpen
+		// PitstopActive
+		// PlayerCarMyIncidentCount
+		// PlayerCarTeamIncidentCount
+		// RadioTransmitFrequencyIdx
+		// RadioTransmitRadioIdx
+		// RearTireSetsAvailable
+		// RearTireSetsUsed
+		// RFTiresAvailable
+		// RFTiresUsed
+		// RightTireSetsAvailable
+		// RightTireSetsUsed
+		// RRTiresAvailable
+		// RRTiresUsed
+		// SessionFlags
+		// TireSetsAvailable
+		// TireSetsUsed
+		//
+		// Stuff that I am not sure about so leaving them in our telemetry recording -
+		//
+		// CarIdxFastRepairsUsed
+		// DCDriversSoFar
+		// DCLapStatus
+		// DriverMarker
+		// ManualBoost
+		// ManualNoBoost
+		// PlayerCarDryTireSetLimit
+		// PlayerCarInPitStall
+		// PlayerCarPitSvStatus
+		// PlayerCarPowerAdjust
+		// PlayerCarTowTime
+		// PlayerCarWeightPenalty
+		// PushToPass
+		// SessionJokerLapsRemain
+		// SessionOnJokerLap
+		// Skies
+		// WeatherType
+
+		private static readonly HashSet<string> ignoredTelemetry = new() {
+			"Brake",							// replayed
+			"BrakeRaw",							// not replayed but chatty
+			"CamCameraNumber",					// live
+			"CamCameraState",					// live
+			"CamCarIdx",						// live
+			"CamGroupNumber",					// live
+			"CarIdxBestLapNum",					// replayed
+			"CarIdxBestLapTime",				// replayed
+			"CarIdxClass",						// replayed
+			"CarIdxClassPosition",				// replayed
+			"CarIdxEstTime",					// replayed
+			"CarIdxF2Time",						// replayed
+			"CarIdxGear",						// replayed
+			"CarIdxLap",						// replayed
+			"CarIdxLapCompleted",				// replayed
+			"CarIdxLapDistPct",					// replayed
+			"CarIdxLastLapTime",				// replayed
+			"CarIdxOnPitRoad",					// replayed
+			"CarIdxP2P_Count",
+			"CarIdxPosition",					// replayed
+			"CarIdxQualTireCompound",			// not replayed but dont need this
+			"CarIdxQualTireCompoundLocked",		// not replayed but dont need this
+			"CarIdxRPM",						// replayed only for player car but is chatty
+			"CarIdxSteer",						// replayed
+			"CarIdxTireCompound",				// not replayed but dont need this
+			"CarIdxTrackSurface",				// replayed
+			"CarIdxTrackSurfaceMaterial",		// replayed
+			"ChanAvgLatency",					// not replayed but dont need this
+			"ChanClockSkew",					// not replayed but dont need this
+			"ChanLatency",						// not replayed but dont need this
+			"ChanPartnerQuality",				// not replayed but dont need this
+			"ChanQuality",						// not replayed but dont need this
+			"Clutch",							// replayed
+			"ClutchRaw",						// not replayed but chatty
+			"CpuUsageBG",						// live
+			"CpuUsageBG",						// live
+			"CpuUsageFG",						// live
+			"DisplayUnits",						// live
+			"Engine0_RPM",						// is not replayed but whats the difference with RPM?
+			"EnterExitReset",					// live
+			"FrameRate",						// live
+			"Gear",								// duplicate of CarIdxGear
+			"GpuUsage",							// live
+			"IsDiskLoggingActive",				// live
+			"IsDiskLoggingEnabled",				// live
+			"IsInGarage",						// live
+			"IsOnTrack",						// live
+			"IsOnTrackCar",						// live
+			"IsReplayPlaying",					// live
+			"Lap",								// duplicate of CarIdxLap
+			"LapBestLap",						// not replayed but dont need this
+			"LapBestLapTime",					// not replayed but dont need this
+			"LapBestNLapLap",					// not replayed but dont need this
+			"LapBestNLapTime",					// not replayed but dont need this
+			"LapCompleted",						// duplicate of CarIdxLapCompleted
+			"LapCurrentLapTime",				// not replayed but dont need this
+			"LapDeltaToBestLap",				// not replayed but dont need this
+			"LapDeltaToBestLap_DD",				// not replayed but dont need this
+			"LapDeltaToBestLap_OK",				// not replayed but dont need this
+			"LapDeltaToOptimalLap",				// not replayed but dont need this
+			"LapDeltaToOptimalLap_DD",			// not replayed but dont need this
+			"LapDeltaToOptimalLap_OK",			// not replayed but dont need this
+			"LapDeltaToSessionBestLap",			// not replayed but dont need this
+			"LapDeltaToSessionBestLap_DD",		// not replayed but dont need this
+			"LapDeltaToSessionBestLap_OK",		// not replayed but dont need this
+			"LapDeltaToSessionLastlLap",		// not replayed but dont need this
+			"LapDeltaToSessionLastlLap_DD",		// not replayed but dont need this
+			"LapDeltaToSessionLastlLap_OK",		// not replayed but dont need this
+			"LapDeltaToSessionOptimalLap",		// not replayed but dont need this
+			"LapDeltaToSessionOptimalLap_DD",	// not replayed but dont need this
+			"LapDeltaToSessionOptimalLap_OK",	// not replayed but dont need this
+			"LapDist",							// replayed
+			"LapDistPct",						// duplicate of CarIdxLapDistPct
+			"LapLasNLapSeq",					// not replayed but dont need this
+			"LapLastLapTime",					// duplicate of CarIdxLastLapTime
+			"LapLastNLapTime",					// not replayed but dont need this
 			"LatAccel",
 			"LatAccel_ST",
+			"LFshockDefl",
+			"LFshockDefl_ST",					// note - only 60 hz during replays
+			"LFshockVel",
+			"LFshockVel_ST",					// note - only 60 hz during replays
+			"LFSHshockDefl",
+			"LFSHshockDefl_ST",
+			"LFSHshockVel",
+			"LFSHshockVel_ST",
+			"LoadNumTextures",					// live
 			"LongAccel",
 			"LongAccel_ST",
-			"MemPageFaultSec",
-			"MemSoftPageFaultSec",
-			"Pitch",
+			"LRshockDefl",
+			"LRshockDefl_ST",					// note - only 60 hz during replays
+			"LRshockVel",
+			"LRshockVel_ST",					// note - only 60 hz during replays
+			"LRSHshockDefl",
+			"LRSHshockDefl_ST",
+			"LRSHshockVel",
+			"LRSHshockVel_ST",
+			"MemPageFaultSec",					// live
+			"MemSoftPageFaultSec",				// live
+			"OkToReloadTextures",				// live
+			"OnPitRoad",						// duplicate of CarIdxOnPitRoad
+			"Pitch",							// replayed
 			"PitchRate",
 			"PitchRate_ST",
-			"PlayerTrackSurfaceMaterial",
-			"ReplayFrameNum",
-			"ReplayFrameNumEnd",
+			"PlayerCarClass",					// duplicate of CarIdxClass
+			"PlayerCarClassPosition",			// duplicate of CarIdxClassPosition
+			"PlayerCarIdx",						// replayed
+			"PlayerCarPosition",				// duplicate of CarIdxPosition
+			"PlayerFastRepairsUsed",			// duplicate of CarIdxFastRepairsUsed
+			"PlayerTireCompound",				// duplicate of CarIdxTireCompound
+			"PlayerTrackSurface",				// duplicate of CarIdxTrackSurface
+			"PlayerTrackSurfaceMaterial",		// duplicate of CarIdxTrackSurfaceMaterial
+			"PushToTalk",						// live
+			"RaceLaps",							// replayed
+			"RadioTransmitCarIdx",				// replayed
+			"ReplayFrameNum",					// live
+			"ReplayFrameNumEnd",				// live
+			"ReplayPlaySpeed",
+			"ReplaySessionNum",
 			"ReplaySessionTime",
-			"Roll",
+			"RFshockDefl",
+			"RFshockDefl_ST",					// note - only 60 hz during replays
+			"RFshockVel",
+			"RFshockVel_ST",					// note - only 60 hz during replays
+			"RFSHshockDefl",
+			"RFSHshockDefl_ST",
+			"RFSHshockVel",
+			"RFSHshockVel_ST",
+			"Roll",								// replayed
 			"RollRate",
 			"RollRate_ST",
-			"RPM",
-			"SessionTick",
-			"SessionTime",
-			"SessionTimeRemain",
+			"RPM",								// duplicate of CarIdxRPM
+			"RRshockDefl",
+			"RRshockDefl_ST",					// note - only 60 hz during replays
+			"RRshockVel",
+			"RRshockVel_ST",					// note - only 60 hz during replays
+			"RRSHshockDefl",
+			"RRSHshockDefl_ST",
+			"RRSHshockVel",
+			"RRSHshockVel_ST",
+			"SessionLapsRemain",				// superseded by SessionLapsRemainEx
+			"SessionLapsRemainEx",				// replayed
+			"SessionLapsTotal",					// replayed
+			"SessionNum",						// replayed
+			"SessionState",						// replayed
+			"SessionTick",						// replayed and meaningless so don't use this
+			"SessionTime",						// replayed but note that live = accurate and replay = junk so don't use this
+			"SessionTimeOfDay",					// not replayed but this can be calculated from weekend information
+			"SessionTimeRemain",				// replayed
+			"SessionTimeTotal",					// replayed
+			"SessionUniqueID",					// replayed
 			"ShiftIndicatorPct",
-			"Speed",
-			"SteeringWheelAngle",
-			"Throttle",
+			"Speed",							// replayed
+			"SteeringWheelAngle",				// duplicate of CarIdxSteer
+			"SteeringWheelAngleMax",			// live
+			"SteeringWheelPctTorque",
+			"SteeringWheelPctTorqueSign",
+			"SteeringWheelPctTorqueSignStops",	//
+			"SteeringWheelTorque",
+			"SteeringWheelTorque_ST",
+			"Throttle",							// replayed
+			"ThrottleRaw",						// not replayed but chatty
+			"TrackTemp",						// depreciated, use TrackTempCrew instead
 			"VelocityX",
 			"VelocityX_ST",
 			"VelocityY",
@@ -86,10 +293,14 @@ namespace IRSDKSharperTest
 			"VelocityZ_ST",
 			"VertAccel",
 			"VertAccel_ST",
-			"Yaw",
-			"YawNorth",
+			"VidCapActive",						// live
+			"VidCapEnabled",					// live
+			"Yaw",								// replayed
+			"YawNorth",							// replayed
 			"YawRate",
 			"YawRate_ST",
+
+			// left off at ShiftPowerPct
 		};
 
 		public void Start()
@@ -366,11 +577,11 @@ namespace IRSDKSharperTest
 
 		private void RecordTelemetryData()
 		{
-			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.TelemetryData != null ) && ( telemetryDataStreamWriter != null ) )
+			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.TelemetryDataProperties != null ) && ( telemetryDataStreamWriter != null ) )
 			{
 				if ( retainedTelemetryData.Count == 0 )
 				{
-					foreach ( var keyValuePair in iRacingSdkData.TelemetryData )
+					foreach ( var keyValuePair in iRacingSdkData.TelemetryDataProperties )
 					{
 						retainedTelemetryData.Add( new RetainedTelemetryDatum( keyValuePair.Value ) );
 					}
@@ -382,38 +593,21 @@ namespace IRSDKSharperTest
 				{
 					if ( !retainedTelemetryDatum.ignored )
 					{
-						var updateCounterIncremeneted = false;
-
-						for ( var valueIndex = 0; valueIndex < retainedTelemetryDatum.iRacingSdkDatum.Count; valueIndex++ )
+						if ( ( retainedTelemetryDatum.lastUpdatedTickCount + retainedTelemetryDatum.updateFrequencyInSeconds * iRacingSdkData.TickRate ) <= iRacingSdkData.TickCount )
 						{
-							object updatedValue = iRacingSdkData.GetValue( retainedTelemetryDatum.iRacingSdkDatum.Name, valueIndex );
-							object retainedValue = retainedTelemetryDatum.retainedValue[ valueIndex ];
-
-							if ( !updatedValue.Equals( retainedValue ) )
+							for ( var valueIndex = 0; valueIndex < retainedTelemetryDatum.iRacingSdkDatum.Count; valueIndex++ )
 							{
-								if ( !updateCounterIncremeneted )
+								object updatedValue = iRacingSdkData.GetValue( retainedTelemetryDatum.iRacingSdkDatum.Name, valueIndex );
+								object retainedValue = retainedTelemetryDatum.retainedValue[ valueIndex ];
+
+								if ( !updatedValue.Equals( retainedValue ) )
 								{
-									updateCounterIncremeneted = true;
+									retainedTelemetryDatum.retainedValue[ valueIndex ] = updatedValue;
+									retainedTelemetryDatum.lastUpdatedTickCount = iRacingSdkData.TickCount;
 
-									retainedTelemetryDatum.updateCounter++;
+									stringBuilder.AppendLine( $"{retainedTelemetryDatum.iRacingSdkDatum.Name}[{valueIndex}] = {updatedValue}" );
 								}
-
-								retainedTelemetryDatum.retainedValue[ valueIndex ] = updatedValue;
-
-								stringBuilder.AppendLine( $"{retainedTelemetryDatum.iRacingSdkDatum.Name}[{valueIndex}] = {updatedValue}" );
 							}
-						}
-
-						if ( updateCounterIncremeneted )
-						{
-							if ( retainedTelemetryDatum.updateCounter == 10 )
-							{
-								retainedTelemetryDatum.ignored = true;
-							}
-						}
-						else
-						{
-							retainedTelemetryDatum.updateCounter = 0;
 						}
 					}
 				}
@@ -434,7 +628,8 @@ namespace IRSDKSharperTest
 		{
 			public IRacingSdkDatum iRacingSdkDatum;
 			public object[] retainedValue;
-			public int updateCounter;
+			public int lastUpdatedTickCount;
+			public int updateFrequencyInSeconds;
 			public bool ignored;
 
 			public RetainedTelemetryDatum( IRacingSdkDatum iRacingSdkDatum )
@@ -460,9 +655,11 @@ namespace IRSDKSharperTest
 					retainedValue[ index ] = Activator.CreateInstance( type ) ?? throw new Exception( $"Could not create instance of {type}!" );
 				}
 
-				updateCounter = 0;
+				lastUpdatedTickCount = int.MinValue;
 
-				ignored = ignoredTelemetryNames.Contains( iRacingSdkDatum.Name );
+				updateFrequencyInSeconds = throttledTelemetry.GetValueOrDefault( iRacingSdkDatum.Name, 0 );
+
+				ignored = ignoredTelemetry.Contains( iRacingSdkDatum.Name );
 			}
 		}
 	}

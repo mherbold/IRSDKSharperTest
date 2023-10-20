@@ -117,13 +117,13 @@ namespace IRSDKSharperTest
 
 		private void DrawTelemetryData( DrawingContext drawingContext )
 		{
-			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.TelemetryData != null ) )
+			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.TelemetryDataProperties != null ) )
 			{
 				var point = new Point( 10, 10 );
 				var lineIndex = 0;
 				var stopDrawing = false;
 
-				foreach ( var keyValuePair in iRacingSdkData.TelemetryData )
+				foreach ( var keyValuePair in iRacingSdkData.TelemetryDataProperties )
 				{
 					for ( var valueIndex = 0; valueIndex < keyValuePair.Value.Count; valueIndex++ )
 					{
