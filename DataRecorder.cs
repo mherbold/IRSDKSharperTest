@@ -33,11 +33,9 @@ namespace IRSDKSharperTest
 		private StreamWriter? sessionInfoStreamWriter = null;
 		private StreamWriter? telemetryDataStreamWriter = null;
 
-		private IRacingSdkData? iRacingSdkData = null;
+		private IRacingSdkSessionInfo retainedSessionInfo = new();
 
 		private readonly List<RetainedTelemetryDatum> retainedTelemetryData = new();
-
-		private readonly IRacingSdkSessionInfo retainedSessionInfo = new();
 
 		private static readonly Dictionary<string, int> throttledTelemetry = new()
 		{
@@ -66,6 +64,8 @@ namespace IRSDKSharperTest
 			{ "WindDir", 15 },
 			{ "WindVel", 15 },
 		};
+
+		#region notes
 
 		// Stuff not replayed so we need them in our telemetry recording -
 		//
@@ -105,6 +105,7 @@ namespace IRSDKSharperTest
 		//
 		// Stuff that I am not sure about so leaving them in our telemetry recording -
 		//
+		// BrakeAbsActive
 		// CarIdxFastRepairsUsed
 		// CarIdxP2P_Count
 		// CarIdxP2P_Status
@@ -176,9 +177,10 @@ namespace IRSDKSharperTest
 		// Skies
 		// WeatherType
 
+		#endregion
+
 		private static readonly HashSet<string> ignoredTelemetry = new() {
 			"Brake",							// replayed
-			"BrakeAbsActive",					// unknown if replayed but dont need this
 			"BrakeRaw",							// not replayed but chatty
 			"CamCameraNumber",					// live
 			"CamCameraState",					// live
@@ -266,10 +268,6 @@ namespace IRSDKSharperTest
 			"LFshockDefl_ST",					// not replayed but chatty
 			"LFshockVel",						// not replayed but chatty
 			"LFshockVel_ST",					// not replayed but chatty
-			"LFSHshockDefl",
-			"LFSHshockDefl_ST",
-			"LFSHshockVel",
-			"LFSHshockVel_ST",
 			"LoadNumTextures",					// live
 			"LongAccel",						// replayed
 			"LongAccel_ST",						// replayed but at 60hz
@@ -278,10 +276,6 @@ namespace IRSDKSharperTest
 			"LRshockDefl_ST",					// not replayed but chatty
 			"LRshockVel",						// not replayed but chatty
 			"LRshockVel_ST",					// not replayed but chatty
-			"LRSHshockDefl",
-			"LRSHshockDefl_ST",
-			"LRSHshockVel",
-			"LRSHshockVel_ST",
 			"MemPageFaultSec",					// live
 			"MemSoftPageFaultSec",				// live
 			"OkToReloadTextures",				// live
@@ -311,10 +305,6 @@ namespace IRSDKSharperTest
 			"RFshockDefl_ST",					// not replayed but chatty
 			"RFshockVel",						// not replayed but chatty
 			"RFshockVel_ST",					// not replayed but chatty
-			"RFSHshockDefl",
-			"RFSHshockDefl_ST",
-			"RFSHshockVel",
-			"RFSHshockVel_ST",
 			"Roll",								// replayed
 			"RollRate",							// replayed
 			"RollRate_ST",						// replayed but at 60hz
@@ -324,10 +314,6 @@ namespace IRSDKSharperTest
 			"RRshockDefl_ST",					// not replayed but chatty
 			"RRshockVel",						// not replayed but chatty
 			"RRshockVel_ST",					// not replayed but chatty
-			"RRSHshockDefl",
-			"RRSHshockDefl_ST",
-			"RRSHshockVel",
-			"RRSHshockVel_ST",
 			"SessionLapsRemain",				// superseded by SessionLapsRemainEx
 			"SessionLapsRemainEx",				// replayed
 			"SessionLapsTotal",					// replayed
@@ -442,9 +428,11 @@ namespace IRSDKSharperTest
 			Debug.WriteLine( "Recorder stopped." );
 		}
 
-		public void SetIRacingSdkData( IRacingSdkData? iRacingSdkData )
+		public void OnDisconnected()
 		{
-			this.iRacingSdkData = iRacingSdkData;
+			retainedSessionInfo = new();
+
+			retainedTelemetryData.Clear();
 		}
 
 		public void OnSessionInfo()
@@ -549,13 +537,15 @@ namespace IRSDKSharperTest
 		{
 			Debug.WriteLine( "Recording session info..." );
 
-			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.SessionInfo != null ) && ( sessionInfoStreamWriter != null ) )
+			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper.IsConnected && ( sessionInfoStreamWriter != null ) )
 			{
 				var stringBuilder = new StringBuilder( BufferSize );
 
-				foreach ( var propertyInfo in iRacingSdkData.SessionInfo.GetType().GetProperties() )
+				foreach ( var propertyInfo in irsdkSharper.Data.SessionInfo.GetType().GetProperties() )
 				{
-					var updatedObject = propertyInfo.GetValue( iRacingSdkData.SessionInfo );
+					var updatedObject = propertyInfo.GetValue( irsdkSharper.Data.SessionInfo );
 
 					if ( updatedObject != null )
 					{
@@ -576,8 +566,8 @@ namespace IRSDKSharperTest
 
 				if ( stringBuilder.Length > 0 )
 				{
-					var sessionNum = iRacingSdkData.GetInt( "SessionNum" );
-					var sessionTime = iRacingSdkData.GetDouble( "SessionTime" );
+					var sessionNum = irsdkSharper.Data.GetInt( "SessionNum" );
+					var sessionTime = irsdkSharper.Data.GetDouble( "SessionTime" );
 
 					sessionInfoStreamWriter.WriteLine( "" );
 					sessionInfoStreamWriter.WriteLine( $"SessionTime = {sessionNum}:{sessionTime:0.0000}" );
@@ -639,6 +629,8 @@ namespace IRSDKSharperTest
 					}
 					else
 					{
+						Debug.Assert( updatedValue != null );
+
 						if ( retainedValue == null )
 						{
 							retainedValue = Activator.CreateInstance( propertyInfo.PropertyType ) ?? throw new Exception( "Failed to create object!" );
@@ -654,11 +646,15 @@ namespace IRSDKSharperTest
 
 		private void RecordTelemetryData()
 		{
-			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.TelemetryDataProperties != null ) && ( telemetryDataStreamWriter != null ) )
+			Debug.Assert( telemetryDataStreamWriter != null );
+
+			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper.IsConnected )
 			{
 				if ( retainedTelemetryData.Count == 0 )
 				{
-					foreach ( var keyValuePair in iRacingSdkData.TelemetryDataProperties )
+					foreach ( var keyValuePair in irsdkSharper.Data.TelemetryDataProperties )
 					{
 						retainedTelemetryData.Add( new RetainedTelemetryDatum( keyValuePair.Value ) );
 					}
@@ -670,17 +666,17 @@ namespace IRSDKSharperTest
 				{
 					if ( !retainedTelemetryDatum.ignored )
 					{
-						if ( ( retainedTelemetryDatum.lastUpdatedTickCount + retainedTelemetryDatum.updateFrequencyInSeconds * iRacingSdkData.TickRate ) <= iRacingSdkData.TickCount )
+						if ( ( retainedTelemetryDatum.lastUpdatedTickCount + retainedTelemetryDatum.updateFrequencyInSeconds * irsdkSharper.Data.TickRate ) <= irsdkSharper.Data.TickCount )
 						{
 							for ( var valueIndex = 0; valueIndex < retainedTelemetryDatum.iRacingSdkDatum.Count; valueIndex++ )
 							{
-								object updatedValue = iRacingSdkData.GetValue( retainedTelemetryDatum.iRacingSdkDatum.Name, valueIndex );
+								object updatedValue = irsdkSharper.Data.GetValue( retainedTelemetryDatum.iRacingSdkDatum.Name, valueIndex );
 								object retainedValue = retainedTelemetryDatum.retainedValue[ valueIndex ];
 
 								if ( !updatedValue.Equals( retainedValue ) )
 								{
 									retainedTelemetryDatum.retainedValue[ valueIndex ] = updatedValue;
-									retainedTelemetryDatum.lastUpdatedTickCount = iRacingSdkData.TickCount;
+									retainedTelemetryDatum.lastUpdatedTickCount = irsdkSharper.Data.TickCount;
 
 									stringBuilder.AppendLine( $"{retainedTelemetryDatum.iRacingSdkDatum.Name}[{valueIndex}] = {updatedValue}" );
 								}
@@ -691,8 +687,8 @@ namespace IRSDKSharperTest
 
 				if ( stringBuilder.Length > 0 )
 				{
-					var sessionNum = iRacingSdkData.GetInt( "SessionNum" );
-					var sessionTime = iRacingSdkData.GetDouble( "SessionTime" );
+					var sessionNum = irsdkSharper.Data.GetInt( "SessionNum" );
+					var sessionTime = irsdkSharper.Data.GetDouble( "SessionTime" );
 
 					telemetryDataStreamWriter.WriteLine( "" );
 					telemetryDataStreamWriter.WriteLine( $"SessionTime = {sessionNum}:{sessionTime:0.0000}" );

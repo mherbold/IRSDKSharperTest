@@ -2,9 +2,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
 using HerboldRacing;
@@ -15,7 +17,6 @@ namespace IRSDKSharperTest
 	{
 		public int NumLines { get; private set; } = 0;
 
-		private IRacingSdkData? iRacingSdkData = null;
 		private int scrollIndex = 0;
 		private int mode = 1;
 
@@ -25,11 +26,6 @@ namespace IRSDKSharperTest
 		static DataViewer()
 		{
 			DefaultStyleKeyProperty.OverrideMetadata( typeof( DataViewer ), new FrameworkPropertyMetadata( typeof( DataViewer ) ) );
-		}
-
-		public void SetIRacingSdkData( IRacingSdkData? iRacingSdkData )
-		{
-			this.iRacingSdkData = iRacingSdkData;
 		}
 
 		public void SetScrollIndex( int scrollIndex )
@@ -56,23 +52,25 @@ namespace IRSDKSharperTest
 
 		private void DrawHeaderData( DrawingContext drawingContext )
 		{
-			if ( iRacingSdkData != null )
+			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper.IsConnected )
 			{
 				var dictionary = new Dictionary<string, int>()
 				{
-					{ "Version", iRacingSdkData.Version },
-					{ "Status", iRacingSdkData.Status },
-					{ "TickRate", iRacingSdkData.TickRate },
-					{ "SessionInfoUpdate", iRacingSdkData.SessionInfoUpdate },
-					{ "SessionInfoLength", iRacingSdkData.SessionInfoLength },
-					{ "SessionInfoOffset", iRacingSdkData.SessionInfoOffset },
-					{ "VarCount", iRacingSdkData.VarCount },
-					{ "VarHeaderOffset", iRacingSdkData.VarHeaderOffset },
-					{ "BufferCount", iRacingSdkData.BufferCount },
-					{ "BufferLength", iRacingSdkData.BufferLength },
-					{ "TickCount", iRacingSdkData.TickCount },
-					{ "Offset", iRacingSdkData.Offset },
-					{ "FramesDropped", iRacingSdkData.FramesDropped }
+					{ "Version", irsdkSharper.Data.Version },
+					{ "Status", irsdkSharper.Data.Status },
+					{ "TickRate", irsdkSharper.Data.TickRate },
+					{ "SessionInfoUpdate", irsdkSharper.Data.SessionInfoUpdate },
+					{ "SessionInfoLength", irsdkSharper.Data.SessionInfoLength },
+					{ "SessionInfoOffset", irsdkSharper.Data.SessionInfoOffset },
+					{ "VarCount", irsdkSharper.Data.VarCount },
+					{ "VarHeaderOffset", irsdkSharper.Data.VarHeaderOffset },
+					{ "BufferCount", irsdkSharper.Data.BufferCount },
+					{ "BufferLength", irsdkSharper.Data.BufferLength },
+					{ "TickCount", irsdkSharper.Data.TickCount },
+					{ "Offset", irsdkSharper.Data.Offset },
+					{ "FramesDropped", irsdkSharper.Data.FramesDropped }
 				};
 
 				var point = new Point( 10, 10 );
@@ -117,13 +115,15 @@ namespace IRSDKSharperTest
 
 		private void DrawTelemetryData( DrawingContext drawingContext )
 		{
-			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.TelemetryDataProperties != null ) )
+			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper.IsConnected )
 			{
 				var point = new Point( 10, 10 );
 				var lineIndex = 0;
 				var stopDrawing = false;
 
-				foreach ( var keyValuePair in iRacingSdkData.TelemetryDataProperties )
+				foreach ( var keyValuePair in irsdkSharper.Data.TelemetryDataProperties )
 				{
 					for ( var valueIndex = 0; valueIndex < keyValuePair.Value.Count; valueIndex++ )
 					{
@@ -199,21 +199,21 @@ namespace IRSDKSharperTest
 									switch ( keyValuePair.Value.VarType )
 									{
 										case IRacingSdkEnum.VarType.Char:
-											valueAsString = $"         {iRacingSdkData.GetChar( keyValuePair.Value.Name, valueIndex )}";
+											valueAsString = $"         {irsdkSharper.Data.GetChar( keyValuePair.Value.Name, valueIndex )}";
 											break;
 
 										case IRacingSdkEnum.VarType.Bool:
-											var valueAsBool = iRacingSdkData.GetBool( keyValuePair.Value.Name, valueIndex );
+											var valueAsBool = irsdkSharper.Data.GetBool( keyValuePair.Value.Name, valueIndex );
 											valueAsString = valueAsBool ? "         T" : "         F";
 											brush = valueAsBool ? Brushes.Green : Brushes.Red;
 											break;
 
 										case IRacingSdkEnum.VarType.Int:
-											valueAsString = $"{iRacingSdkData.GetInt( keyValuePair.Value.Name, valueIndex ),10:N0}";
+											valueAsString = $"{irsdkSharper.Data.GetInt( keyValuePair.Value.Name, valueIndex ),10:N0}";
 											break;
 
 										case IRacingSdkEnum.VarType.BitField:
-											valueAsString = $"0x{iRacingSdkData.GetBitField( keyValuePair.Value.Name, valueIndex ):X8}";
+											valueAsString = $"0x{irsdkSharper.Data.GetBitField( keyValuePair.Value.Name, valueIndex ):X8}";
 
 											switch ( keyValuePair.Value.Unit )
 											{
@@ -241,11 +241,11 @@ namespace IRSDKSharperTest
 											break;
 
 										case IRacingSdkEnum.VarType.Float:
-											valueAsString = $"{iRacingSdkData.GetFloat( keyValuePair.Value.Name, valueIndex ),15:N4}";
+											valueAsString = $"{irsdkSharper.Data.GetFloat( keyValuePair.Value.Name, valueIndex ),15:N4}";
 											break;
 
 										case IRacingSdkEnum.VarType.Double:
-											valueAsString = $"{iRacingSdkData.GetDouble( keyValuePair.Value.Name, valueIndex ),15:N4}";
+											valueAsString = $"{irsdkSharper.Data.GetDouble( keyValuePair.Value.Name, valueIndex ),15:N4}";
 											break;
 									}
 
@@ -313,15 +313,17 @@ namespace IRSDKSharperTest
 
 		private void DrawSessionInfo( DrawingContext drawingContext )
 		{
-			if ( ( iRacingSdkData != null ) && ( iRacingSdkData.SessionInfo != null ) )
+			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper.IsConnected )
 			{
 				var point = new Point( 10, 10 );
 				var lineIndex = 0;
 				var stopDrawing = false;
 
-				foreach ( var propertyInfo in iRacingSdkData.SessionInfo.GetType().GetProperties() )
+				foreach ( var propertyInfo in irsdkSharper.Data.SessionInfo.GetType().GetProperties() )
 				{
-					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( iRacingSdkData.SessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
+					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( irsdkSharper.Data.SessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
 				}
 
 				NumLines = lineIndex;
@@ -410,18 +412,19 @@ namespace IRSDKSharperTest
 			}
 		}
 
-#pragma warning disable CS8602
-		private string GetString<T>( IRacingSdkDatum var, int index ) where T : Enum
+		private static string GetString<T>( IRacingSdkDatum var, int index ) where T : Enum
 		{
+			var irsdkSharper = Program.IRSDKSharper;
+
 			if ( var.VarType == IRacingSdkEnum.VarType.Int )
 			{
-				var enumValue = (T) (object) iRacingSdkData.GetInt( var.Name, index );
+				var enumValue = (T) (object) irsdkSharper.Data.GetInt( var.Name, index );
 
 				return enumValue.ToString();
 			}
 			else
 			{
-				var bits = iRacingSdkData.GetBitField( var.Name, index );
+				var bits = irsdkSharper.Data.GetBitField( var.Name, index );
 
 				var bitsString = string.Empty;
 
@@ -441,6 +444,5 @@ namespace IRSDKSharperTest
 				return bitsString;
 			}
 		}
-#pragma warning restore CS8602
 	}
 }

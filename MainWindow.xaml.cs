@@ -3,14 +3,11 @@ using System;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
-using HerboldRacing;
-
 namespace IRSDKSharperTest
 {
 	public partial class MainWindow : Window
 	{
 		private readonly DataRecorder dataRecorder;
-		private readonly IRSDKSharper irsdkSharper;
 
 		public MainWindow()
 		{
@@ -22,13 +19,15 @@ namespace IRSDKSharperTest
 
 			dataRecorder.Start();
 
-			irsdkSharper = new IRSDKSharper();
+			var irsdkSharper = Program.IRSDKSharper;
 
 			irsdkSharper.OnException += OnException;
-			irsdkSharper.OnConnected += OnConnected;
 			irsdkSharper.OnDisconnected += OnDisconnected;
-			irsdkSharper.OnSessionInfo += OnSessionInfo;
 			irsdkSharper.OnTelemetryData += OnTelemetryData;
+
+			irsdkSharper.OnDisconnected += dataRecorder.OnDisconnected;
+			irsdkSharper.OnSessionInfo += dataRecorder.OnSessionInfo;
+			irsdkSharper.OnTelemetryData += dataRecorder.OnTelemetryData;
 
 			irsdkSharper.Start();
 		}
@@ -38,17 +37,8 @@ namespace IRSDKSharperTest
 			throw exception;
 		}
 
-		private void OnConnected()
-		{
-			dataRecorder.SetIRacingSdkData( irsdkSharper.Data );
-			dataView.SetIRacingSdkData( irsdkSharper.Data );
-		}
-
 		private void OnDisconnected()
 		{
-			dataRecorder.SetIRacingSdkData( null );
-			dataView.SetIRacingSdkData( null );
-
 			Dispatcher.BeginInvoke( () =>
 			{
 				dataView.InvalidateVisual();
@@ -57,15 +47,8 @@ namespace IRSDKSharperTest
 			} );
 		}
 
-		private void OnSessionInfo()
-		{
-			dataRecorder.OnSessionInfo();
-		}
-
 		private void OnTelemetryData()
 		{
-			dataRecorder.OnTelemetryData();
-
 			Dispatcher.BeginInvoke( () =>
 			{
 				dataView.InvalidateVisual();
@@ -76,6 +59,8 @@ namespace IRSDKSharperTest
 
 		private void Window_Closing( object sender, System.ComponentModel.CancelEventArgs e )
 		{
+			var irsdkSharper = Program.IRSDKSharper;
+
 			irsdkSharper.Stop();
 			dataRecorder.Stop();
 		}
