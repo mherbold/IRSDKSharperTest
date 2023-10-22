@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IRSDKSharper\IRSDKSharper.csproj" />
+    <PackageReference Include="IRSDKSharper" Version="1.0.1" />
   </ItemGroup>
 
 </Project>
