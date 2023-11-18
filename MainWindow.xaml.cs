@@ -7,17 +7,9 @@ namespace IRSDKSharperTest
 {
 	public partial class MainWindow : Window
 	{
-		private readonly DataRecorder dataRecorder;
-
 		public MainWindow()
 		{
 			InitializeComponent();
-
-			dataRecorder = new DataRecorder();
-
-			dataRecorder.OnException += OnException;
-
-			dataRecorder.Start();
 
 			var irsdkSharper = Program.IRSDKSharper;
 
@@ -25,9 +17,7 @@ namespace IRSDKSharperTest
 			irsdkSharper.OnDisconnected += OnDisconnected;
 			irsdkSharper.OnTelemetryData += OnTelemetryData;
 
-			irsdkSharper.OnDisconnected += dataRecorder.OnDisconnected;
-			irsdkSharper.OnSessionInfo += dataRecorder.OnSessionInfo;
-			irsdkSharper.OnTelemetryData += dataRecorder.OnTelemetryData;
+			// irsdkSharper.EnableImprovedReplay();
 
 			irsdkSharper.Start();
 		}
@@ -62,7 +52,6 @@ namespace IRSDKSharperTest
 			var irsdkSharper = Program.IRSDKSharper;
 
 			irsdkSharper.Stop();
-			dataRecorder.Stop();
 		}
 
 		private void Window_MouseWheel( object sender, System.Windows.Input.MouseWheelEventArgs e )
