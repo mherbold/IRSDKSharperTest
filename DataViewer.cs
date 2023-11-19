@@ -52,6 +52,11 @@ namespace IRSDKSharperTest
 		{
 			var irsdkSharper = Program.IRSDKSharper;
 
+			if ( irsdkSharper == null )
+			{
+				return;
+			}
+
 			if ( irsdkSharper.IsConnected )
 			{
 				var dictionary = new Dictionary<string, int>()
@@ -114,6 +119,11 @@ namespace IRSDKSharperTest
 		private void DrawTelemetryData( DrawingContext drawingContext )
 		{
 			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper == null )
+			{
+				return;
+			}
 
 			if ( irsdkSharper.IsConnected )
 			{
@@ -313,6 +323,11 @@ namespace IRSDKSharperTest
 		{
 			var irsdkSharper = Program.IRSDKSharper;
 
+			if ( irsdkSharper == null )
+			{
+				return;
+			}
+
 			if ( irsdkSharper.IsConnected )
 			{
 				var point = new Point( 10, 10 );
@@ -413,6 +428,11 @@ namespace IRSDKSharperTest
 		private static string GetString<T>( IRacingSdkDatum var, int index ) where T : Enum
 		{
 			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper == null )
+			{
+				return "";
+			}
 
 			if ( var.VarType == IRacingSdkEnum.VarType.Int )
 			{

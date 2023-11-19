@@ -3,6 +3,8 @@ using System;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
+using HerboldRacing;
+
 namespace IRSDKSharperTest
 {
 	public partial class MainWindow : Window
@@ -10,16 +12,6 @@ namespace IRSDKSharperTest
 		public MainWindow()
 		{
 			InitializeComponent();
-
-			var irsdkSharper = Program.IRSDKSharper;
-
-			irsdkSharper.OnException += OnException;
-			irsdkSharper.OnDisconnected += OnDisconnected;
-			irsdkSharper.OnTelemetryData += OnTelemetryData;
-
-			// irsdkSharper.EnableImprovedReplay();
-
-			irsdkSharper.Start();
 		}
 
 		private void OnException( Exception exception )
@@ -49,9 +41,7 @@ namespace IRSDKSharperTest
 
 		private void Window_Closing( object sender, System.ComponentModel.CancelEventArgs e )
 		{
-			var irsdkSharper = Program.IRSDKSharper;
-
-			irsdkSharper.Stop();
+			Program.IRSDKSharper?.Stop();
 		}
 
 		private void Window_MouseWheel( object sender, System.Windows.Input.MouseWheelEventArgs e )
@@ -90,6 +80,32 @@ namespace IRSDKSharperTest
 		private void SessionInfoButton_Click( object sender, RoutedEventArgs e )
 		{
 			dataView.SetMode( 2 );
+		}
+
+		private void Create_Click( object sender, RoutedEventArgs e )
+		{
+			Program.IRSDKSharper = new IRSDKSharper();
+
+			Program.IRSDKSharper.OnException += OnException;
+			Program.IRSDKSharper.OnDisconnected += OnDisconnected;
+			Program.IRSDKSharper.OnTelemetryData += OnTelemetryData;
+
+			// Program.IRSDKSharper.EnableImprovedReplay( null );
+		}
+
+		private void Start_Click( object sender, RoutedEventArgs e )
+		{
+			Program.IRSDKSharper?.Start();
+		}
+
+		private void Stop_Click( object sender, RoutedEventArgs e )
+		{
+			Program.IRSDKSharper?.Stop();
+		}
+
+		private void Dispose_Click( object sender, RoutedEventArgs e )
+		{
+			Program.IRSDKSharper = null;
 		}
 	}
 }
