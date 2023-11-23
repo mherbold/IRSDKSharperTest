@@ -16,7 +16,7 @@ namespace IRSDKSharperTest
 		public int NumLines { get; private set; } = 0;
 
 		private int scrollIndex = 0;
-		private int mode = 1;
+		private int mode = 0;
 
 		private readonly CultureInfo cultureInfo = CultureInfo.GetCultureInfo( "en-us" );
 		private readonly Typeface typeface = new( "Courier New" );
@@ -43,8 +43,8 @@ namespace IRSDKSharperTest
 			switch ( mode )
 			{
 				case 0: DrawHeaderData( drawingContext ); break;
-				case 1: DrawTelemetryData( drawingContext ); break;
-				case 2: DrawSessionInfo( drawingContext ); break;
+				case 1: DrawSessionInfo( drawingContext ); break;
+				case 2: DrawTelemetryData( drawingContext ); break;
 			}
 		}
 
@@ -113,6 +113,112 @@ namespace IRSDKSharperTest
 			else
 			{
 				drawingContext.DrawRectangle( Brushes.DarkGray, null, new Rect( 0, 0, ActualWidth, ActualHeight ) );
+			}
+		}
+
+		private void DrawSessionInfo( DrawingContext drawingContext )
+		{
+			var irsdkSharper = Program.IRSDKSharper;
+
+			if ( irsdkSharper == null )
+			{
+				return;
+			}
+
+			if ( irsdkSharper.IsConnected )
+			{
+				var point = new Point( 10, 10 );
+				var lineIndex = 0;
+				var stopDrawing = false;
+
+				foreach ( var propertyInfo in irsdkSharper.Data.SessionInfo.GetType().GetProperties() )
+				{
+					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( irsdkSharper.Data.SessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
+				}
+
+				NumLines = lineIndex;
+			}
+			else
+			{
+				drawingContext.DrawRectangle( Brushes.DarkGray, null, new Rect( 0, 0, ActualWidth, ActualHeight ) );
+			}
+		}
+
+		private void DrawSessionInfo( DrawingContext drawingContext, string propertyName, object? valueAsObject, int indent, ref Point point, ref int lineIndex, ref bool stopDrawing )
+		{
+			var isSimpleValue = ( ( valueAsObject is null ) || ( valueAsObject is string ) || ( valueAsObject is int ) || ( valueAsObject is float ) || ( valueAsObject is double ) );
+
+			if ( ( lineIndex >= scrollIndex ) && !stopDrawing )
+			{
+				if ( ( lineIndex & 1 ) == 1 )
+				{
+					drawingContext.DrawRectangle( Brushes.AliceBlue, null, new Rect( 0, point.Y, ActualWidth, 20 ) );
+				}
+
+				point.X = 10 + indent * 50;
+
+				var formattedText = new FormattedText( propertyName, cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
+				{
+					LineHeight = 20
+				};
+
+				drawingContext.DrawText( formattedText, point );
+
+				if ( valueAsObject is null )
+				{
+					point.X = 260 + indent * 50;
+
+					formattedText = new FormattedText( "(null)", cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
+					{
+						LineHeight = 20
+					};
+
+					drawingContext.DrawText( formattedText, point );
+				}
+				else if ( isSimpleValue )
+				{
+					point.X = 260 + indent * 50;
+
+					formattedText = new FormattedText( valueAsObject.ToString(), cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
+					{
+						LineHeight = 20
+					};
+
+					drawingContext.DrawText( formattedText, point );
+				}
+
+				point.Y += 20;
+
+				if ( ( point.Y + 20 ) > ActualHeight )
+				{
+					stopDrawing = true;
+				}
+			}
+
+			lineIndex++;
+
+			if ( !isSimpleValue )
+			{
+				if ( valueAsObject is IList list )
+				{
+					var index = 0;
+
+					foreach ( var item in list )
+					{
+						DrawSessionInfo( drawingContext, index.ToString(), item, indent + 1, ref point, ref lineIndex, ref stopDrawing );
+
+						index++;
+					}
+				}
+				else
+				{
+#pragma warning disable CS8602
+					foreach ( var propertyInfo in valueAsObject.GetType().GetProperties() )
+					{
+						DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( valueAsObject ), indent + 1, ref point, ref lineIndex, ref stopDrawing );
+					}
+#pragma warning restore CS8602
+				}
 			}
 		}
 
@@ -316,112 +422,6 @@ namespace IRSDKSharperTest
 			else
 			{
 				drawingContext.DrawRectangle( Brushes.DarkGray, null, new Rect( 0, 0, ActualWidth, ActualHeight ) );
-			}
-		}
-
-		private void DrawSessionInfo( DrawingContext drawingContext )
-		{
-			var irsdkSharper = Program.IRSDKSharper;
-
-			if ( irsdkSharper == null )
-			{
-				return;
-			}
-
-			if ( irsdkSharper.IsConnected )
-			{
-				var point = new Point( 10, 10 );
-				var lineIndex = 0;
-				var stopDrawing = false;
-
-				foreach ( var propertyInfo in irsdkSharper.Data.SessionInfo.GetType().GetProperties() )
-				{
-					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( irsdkSharper.Data.SessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
-				}
-
-				NumLines = lineIndex;
-			}
-			else
-			{
-				drawingContext.DrawRectangle( Brushes.DarkGray, null, new Rect( 0, 0, ActualWidth, ActualHeight ) );
-			}
-		}
-
-		private void DrawSessionInfo( DrawingContext drawingContext, string propertyName, object? valueAsObject, int indent, ref Point point, ref int lineIndex, ref bool stopDrawing )
-		{
-			var isSimpleValue = ( ( valueAsObject is null ) || ( valueAsObject is string ) || ( valueAsObject is int ) || ( valueAsObject is float ) || ( valueAsObject is double ) );
-
-			if ( ( lineIndex >= scrollIndex ) && !stopDrawing )
-			{
-				if ( ( lineIndex & 1 ) == 1 )
-				{
-					drawingContext.DrawRectangle( Brushes.AliceBlue, null, new Rect( 0, point.Y, ActualWidth, 20 ) );
-				}
-
-				point.X = 10 + indent * 50;
-
-				var formattedText = new FormattedText( propertyName, cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
-				{
-					LineHeight = 20
-				};
-
-				drawingContext.DrawText( formattedText, point );
-
-				if ( valueAsObject is null )
-				{
-					point.X = 260 + indent * 50;
-
-					formattedText = new FormattedText( "(null)", cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
-					{
-						LineHeight = 20
-					};
-
-					drawingContext.DrawText( formattedText, point );
-				}
-				else if ( isSimpleValue )
-				{
-					point.X = 260 + indent * 50;
-
-					formattedText = new FormattedText( valueAsObject.ToString(), cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
-					{
-						LineHeight = 20
-					};
-
-					drawingContext.DrawText( formattedText, point );
-				}
-
-				point.Y += 20;
-
-				if ( ( point.Y + 20 ) > ActualHeight )
-				{
-					stopDrawing = true;
-				}
-			}
-
-			lineIndex++;
-
-			if ( !isSimpleValue )
-			{
-				if ( valueAsObject is IList list )
-				{
-					var index = 0;
-
-					foreach ( var item in list )
-					{
-						DrawSessionInfo( drawingContext, index.ToString(), item, indent + 1, ref point, ref lineIndex, ref stopDrawing );
-
-						index++;
-					}
-				}
-				else
-				{
-#pragma warning disable CS8602
-					foreach ( var propertyInfo in valueAsObject.GetType().GetProperties() )
-					{
-						DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( valueAsObject ), indent + 1, ref point, ref lineIndex, ref stopDrawing );
-					}
-#pragma warning restore CS8602
-				}
 			}
 		}
 
