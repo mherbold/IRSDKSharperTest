@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
@@ -36,6 +37,15 @@ namespace IRSDKSharperTest
 
 		private void OnException( Exception exception )
 		{
+			var irsdk = Program.IRSDKSharper;
+
+			if ( irsdk != null )
+			{
+				var folderPath = Environment.GetFolderPath( Environment.SpecialFolder.Desktop );
+
+				File.WriteAllText( folderPath + "\\SessionInfo.yaml", irsdk.Data.SessionInfoYaml );
+			}
+
 			Dispatcher.BeginInvoke( () =>
 			{
 				Program.IRSDKSharper?.Stop();
