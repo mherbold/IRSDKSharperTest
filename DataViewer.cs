@@ -50,30 +50,30 @@ namespace IRSDKSharperTest
 
 		private void DrawHeaderData( DrawingContext drawingContext )
 		{
-			var irsdkSharper = Program.IRSDKSharper;
+			var irsdk = Program.IRSDKSharper;
 
-			if ( irsdkSharper == null )
+			if ( irsdk == null )
 			{
 				return;
 			}
 
-			if ( irsdkSharper.IsConnected )
+			if ( irsdk.IsConnected )
 			{
 				var dictionary = new Dictionary<string, int>()
 				{
-					{ "Version", irsdkSharper.Data.Version },
-					{ "Status", irsdkSharper.Data.Status },
-					{ "TickRate", irsdkSharper.Data.TickRate },
-					{ "SessionInfoUpdate", irsdkSharper.Data.SessionInfoUpdate },
-					{ "SessionInfoLength", irsdkSharper.Data.SessionInfoLength },
-					{ "SessionInfoOffset", irsdkSharper.Data.SessionInfoOffset },
-					{ "VarCount", irsdkSharper.Data.VarCount },
-					{ "VarHeaderOffset", irsdkSharper.Data.VarHeaderOffset },
-					{ "BufferCount", irsdkSharper.Data.BufferCount },
-					{ "BufferLength", irsdkSharper.Data.BufferLength },
-					{ "TickCount", irsdkSharper.Data.TickCount },
-					{ "Offset", irsdkSharper.Data.Offset },
-					{ "FramesDropped", irsdkSharper.Data.FramesDropped }
+					{ "Version", irsdk.Data.Version },
+					{ "Status", irsdk.Data.Status },
+					{ "TickRate", irsdk.Data.TickRate },
+					{ "SessionInfoUpdate", irsdk.Data.SessionInfoUpdate },
+					{ "SessionInfoLength", irsdk.Data.SessionInfoLength },
+					{ "SessionInfoOffset", irsdk.Data.SessionInfoOffset },
+					{ "VarCount", irsdk.Data.VarCount },
+					{ "VarHeaderOffset", irsdk.Data.VarHeaderOffset },
+					{ "BufferCount", irsdk.Data.BufferCount },
+					{ "BufferLength", irsdk.Data.BufferLength },
+					{ "TickCount", irsdk.Data.TickCount },
+					{ "Offset", irsdk.Data.Offset },
+					{ "FramesDropped", irsdk.Data.FramesDropped }
 				};
 
 				var point = new Point( 10, 10 );
@@ -118,22 +118,22 @@ namespace IRSDKSharperTest
 
 		private void DrawSessionInfo( DrawingContext drawingContext )
 		{
-			var irsdkSharper = Program.IRSDKSharper;
+			var irsdk = Program.IRSDKSharper;
 
-			if ( irsdkSharper == null )
+			if ( irsdk == null )
 			{
 				return;
 			}
 
-			if ( irsdkSharper.IsConnected )
+			if ( irsdk.IsConnected )
 			{
 				var point = new Point( 10, 10 );
 				var lineIndex = 0;
 				var stopDrawing = false;
 
-				foreach ( var propertyInfo in irsdkSharper.Data.SessionInfo.GetType().GetProperties() )
+				foreach ( var propertyInfo in irsdk.Data.SessionInfo.GetType().GetProperties() )
 				{
-					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( irsdkSharper.Data.SessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
+					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( irsdk.Data.SessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
 				}
 
 				NumLines = lineIndex;
@@ -224,20 +224,20 @@ namespace IRSDKSharperTest
 
 		private void DrawTelemetryData( DrawingContext drawingContext )
 		{
-			var irsdkSharper = Program.IRSDKSharper;
+			var irsdk = Program.IRSDKSharper;
 
-			if ( irsdkSharper == null )
+			if ( irsdk == null )
 			{
 				return;
 			}
 
-			if ( irsdkSharper.IsConnected )
+			if ( irsdk.IsConnected )
 			{
 				var point = new Point( 10, 10 );
 				var lineIndex = 0;
 				var stopDrawing = false;
 
-				foreach ( var keyValuePair in irsdkSharper.Data.TelemetryDataProperties )
+				foreach ( var keyValuePair in irsdk.Data.TelemetryDataProperties )
 				{
 					for ( var valueIndex = 0; valueIndex < keyValuePair.Value.Count; valueIndex++ )
 					{
@@ -313,21 +313,21 @@ namespace IRSDKSharperTest
 									switch ( keyValuePair.Value.VarType )
 									{
 										case IRacingSdkEnum.VarType.Char:
-											valueAsString = $"         {irsdkSharper.Data.GetChar( keyValuePair.Value.Name, valueIndex )}";
+											valueAsString = $"         {irsdk.Data.GetChar( keyValuePair.Value.Name, valueIndex )}";
 											break;
 
 										case IRacingSdkEnum.VarType.Bool:
-											var valueAsBool = irsdkSharper.Data.GetBool( keyValuePair.Value.Name, valueIndex );
+											var valueAsBool = irsdk.Data.GetBool( keyValuePair.Value.Name, valueIndex );
 											valueAsString = valueAsBool ? "         T" : "         F";
 											brush = valueAsBool ? Brushes.Green : Brushes.Red;
 											break;
 
 										case IRacingSdkEnum.VarType.Int:
-											valueAsString = $"{irsdkSharper.Data.GetInt( keyValuePair.Value.Name, valueIndex ),10:N0}";
+											valueAsString = $"{irsdk.Data.GetInt( keyValuePair.Value.Name, valueIndex ),10:N0}";
 											break;
 
 										case IRacingSdkEnum.VarType.BitField:
-											valueAsString = $"0x{irsdkSharper.Data.GetBitField( keyValuePair.Value.Name, valueIndex ):X8}";
+											valueAsString = $"0x{irsdk.Data.GetBitField( keyValuePair.Value.Name, valueIndex ):X8}";
 
 											switch ( keyValuePair.Value.Unit )
 											{
@@ -355,11 +355,11 @@ namespace IRSDKSharperTest
 											break;
 
 										case IRacingSdkEnum.VarType.Float:
-											valueAsString = $"{irsdkSharper.Data.GetFloat( keyValuePair.Value.Name, valueIndex ),15:N4}";
+											valueAsString = $"{irsdk.Data.GetFloat( keyValuePair.Value.Name, valueIndex ),15:N4}";
 											break;
 
 										case IRacingSdkEnum.VarType.Double:
-											valueAsString = $"{irsdkSharper.Data.GetDouble( keyValuePair.Value.Name, valueIndex ),15:N4}";
+											valueAsString = $"{irsdk.Data.GetDouble( keyValuePair.Value.Name, valueIndex ),15:N4}";
 											break;
 									}
 
@@ -427,22 +427,22 @@ namespace IRSDKSharperTest
 
 		private static string GetString<T>( IRacingSdkDatum var, int index ) where T : Enum
 		{
-			var irsdkSharper = Program.IRSDKSharper;
+			var irsdk = Program.IRSDKSharper;
 
-			if ( irsdkSharper == null )
+			if ( irsdk == null )
 			{
 				return "";
 			}
 
 			if ( var.VarType == IRacingSdkEnum.VarType.Int )
 			{
-				var enumValue = (T) (object) irsdkSharper.Data.GetInt( var.Name, index );
+				var enumValue = (T) (object) irsdk.Data.GetInt( var.Name, index );
 
 				return enumValue.ToString();
 			}
 			else
 			{
-				var bits = irsdkSharper.Data.GetBitField( var.Name, index );
+				var bits = irsdk.Data.GetBitField( var.Name, index );
 
 				var bitsString = string.Empty;
 
