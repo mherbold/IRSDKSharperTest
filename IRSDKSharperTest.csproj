@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IRSDKSharper" Version="1.0.10" />
+    <PackageReference Include="IRSDKSharper" Version="1.0.11" />
   </ItemGroup>
 
 </Project>
