@@ -1,6 +1,5 @@
 ﻿
 using System;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
@@ -10,6 +9,10 @@ namespace IRSDKSharperTest
 {
 	public partial class MainWindow : Window
 	{
+		private int lastTickCount = -1;
+
+		private float[] carIdxLapDistPct = new float[ 64 ];
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -39,17 +42,10 @@ namespace IRSDKSharperTest
 		{
 			var irsdk = Program.IRSDKSharper;
 
-			if ( irsdk != null )
-			{
-				var folderPath = Environment.GetFolderPath( Environment.SpecialFolder.Desktop );
-
-				File.WriteAllText( folderPath + "\\SessionInfo.yaml", irsdk.Data.SessionInfoYaml );
-			}
+			irsdk?.Stop();
 
 			Dispatcher.BeginInvoke( () =>
 			{
-				Program.IRSDKSharper?.Stop();
-
 				MessageBox.Show( exception.Message, "OnException()", MessageBoxButton.OK, MessageBoxImage.Exclamation );
 			} );
 		}
@@ -76,10 +72,43 @@ namespace IRSDKSharperTest
 
 		private void OnSessionInfo()
 		{
+			RedrawWindow();
+		}
+
+		private void OnTelemetryData()
+		{
 			var irsdk = Program.IRSDKSharper;
 
-			if ( irsdk?.UpdateInterval > 1 )
+			if ( irsdk != null )
 			{
+				irsdk.Data.GetFloatArray( "CarIdxLapDistPct", carIdxLapDistPct, 0, carIdxLapDistPct.Length );
+			}
+
+			RedrawWindow();
+		}
+
+		private void OnStopped()
+		{
+			lastTickCount = -1;
+
+			Dispatcher.BeginInvoke( () =>
+			{
+				UpdateValueLabels();
+
+				dataView.InvalidateVisual();
+
+				scrollBar.Maximum = 1;
+			} );
+		}
+
+		private void RedrawWindow()
+		{
+			var irsdk = Program.IRSDKSharper;
+
+			if ( ( irsdk != null ) && ( irsdk.Data.TickCount != lastTickCount ) )
+			{
+				lastTickCount = irsdk.Data.TickCount;
+
 				Dispatcher.BeginInvoke( () =>
 				{
 					UpdateValueLabels();
@@ -89,26 +118,6 @@ namespace IRSDKSharperTest
 					scrollBar.Maximum = dataView.NumLines - 1;
 				} );
 			}
-		}
-
-		private void OnTelemetryData()
-		{
-			Dispatcher.BeginInvoke( () =>
-			{
-				UpdateValueLabels();
-
-				dataView.InvalidateVisual();
-
-				scrollBar.Maximum = dataView.NumLines - 1;
-			} );
-		}
-
-		private void OnStopped()
-		{
-			Dispatcher.BeginInvoke( () =>
-			{
-				UpdateValueLabels();
-			} );
 		}
 
 		private void Window_Closing( object sender, System.ComponentModel.CancelEventArgs e )
@@ -158,7 +167,9 @@ namespace IRSDKSharperTest
 
 		private void Create_Click( object sender, RoutedEventArgs e )
 		{
-			var irsdk = new IRSDKSharper();
+			Program.IRSDKSharper = new IRSDKSharper();
+
+			var irsdk = Program.IRSDKSharper;
 
 			irsdk.OnException += OnException;
 			irsdk.OnConnected += OnConnected;
@@ -167,9 +178,9 @@ namespace IRSDKSharperTest
 			irsdk.OnTelemetryData += OnTelemetryData;
 			irsdk.OnStopped += OnStopped;
 
-			Program.IRSDKSharper = irsdk;
+			var desktopFolderPath = Environment.GetFolderPath( Environment.SpecialFolder.Desktop );
 
-			// Program.IRSDKSharper.EnableImprovedReplay( ... );
+			irsdk.EnableEventSystem( $"{desktopFolderPath}\\IRSDKSharperTest" );
 
 			UpdateValueLabels();
 		}
