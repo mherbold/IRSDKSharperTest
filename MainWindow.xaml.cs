@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
@@ -36,6 +37,11 @@ namespace IRSDKSharperTest
 				irsdkIsConnectedValueLabel.Content = $"irsdk.IsConnected = {irsdk.IsConnected}";
 				irsdkUpdateIntervalValueLabel.Content = $"irsdk.UpdateInterval = {irsdk.UpdateInterval}";
 			}
+
+			var renderTimeInMilliseconds = dataView.RenderTime * 1000;
+			var renderTimeInFPS = ( dataView.RenderTime > 0 ) ? 1 / dataView.RenderTime : 0;
+
+			renderTime.Content = $"renderTime = {renderTimeInMilliseconds:0.00} ms ({renderTimeInFPS:0} FPS)";
 		}
 
 		private void OnException( Exception exception )
@@ -73,6 +79,17 @@ namespace IRSDKSharperTest
 		private void OnSessionInfo()
 		{
 			RedrawWindow();
+
+			var irsdk = Program.IRSDKSharper;
+
+			if ( false && ( irsdk != null ) )
+			{
+				var desktopFolderPath = Environment.GetFolderPath( Environment.SpecialFolder.Desktop );
+
+				var filePath = $"{desktopFolderPath}\\IRSDKSharperTest\\{irsdk.Data.SessionInfo.WeekendInfo.SubSessionID}_{irsdk.Data.SessionInfoUpdate}.yaml";
+
+				File.WriteAllText( filePath, irsdk.Data.SessionInfoYaml );
+			}
 		}
 
 		private void OnTelemetryData()

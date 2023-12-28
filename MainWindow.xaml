@@ -18,6 +18,7 @@
             <Label x:Name="irsdkIsStartedValueLabel" Content="irsdk.IsStarted = ?" Margin="6,0,6,0" Padding="6,0,6,0" VerticalAlignment="Center" />
             <Label x:Name="irsdkIsConnectedValueLabel" Content="irsdk.IsConnected = ?" Margin="6,0,6,0" Padding="6,0,6,0" VerticalAlignment="Center" />
             <Label x:Name="irsdkUpdateIntervalValueLabel" Content="irsdk.UpdateInterval = ?" Margin="6,0,6,0" Padding="6,0,6,0" VerticalAlignment="Center" />
+            <Label x:Name="renderTime" Content="renderTime = ?" Margin="6,0,6,0" Padding="6,0,6,0" VerticalAlignment="Center" />
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,6"  Grid.Row="1" VerticalAlignment="Center">
             <Button Content="irsdk = new IRSDKSharper()" Click="Create_Click" Margin="12,0,6,0" Padding="6,0,6,0" VerticalAlignment="Center" />

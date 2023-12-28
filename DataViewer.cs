@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,6 +15,7 @@ namespace IRSDKSharperTest
 	public class DataViewer : Control
 	{
 		public int NumLines { get; private set; } = 0;
+		public double RenderTime { get; private set; } = 0;
 
 		private int scrollIndex = 0;
 		private int mode = 0;
@@ -38,6 +40,8 @@ namespace IRSDKSharperTest
 
 		protected override void OnRender( DrawingContext drawingContext )
 		{
+			var stopWatch = Stopwatch.StartNew();
+
 			base.OnRender( drawingContext );
 
 			switch ( mode )
@@ -46,6 +50,10 @@ namespace IRSDKSharperTest
 				case 1: DrawSessionInfo( drawingContext ); break;
 				case 2: DrawTelemetryData( drawingContext ); break;
 			}
+
+			stopWatch.Stop();
+
+			RenderTime = (double) stopWatch.ElapsedTicks / (double) Stopwatch.Frequency;
 		}
 
 		private void DrawHeaderData( DrawingContext drawingContext )
@@ -248,7 +256,9 @@ namespace IRSDKSharperTest
 								drawingContext.DrawRectangle( Brushes.AliceBlue, null, new Rect( 0, point.Y, ActualWidth, 20 ) );
 							}
 
-							var formattedText = new FormattedText( keyValuePair.Value.Offset.ToString(), cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
+							var offset = keyValuePair.Value.Offset + valueIndex * keyValuePair.Value.Bytes;
+
+							var formattedText = new FormattedText( offset.ToString(), cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
 							{
 								LineHeight = 20
 							};
@@ -313,21 +323,21 @@ namespace IRSDKSharperTest
 									switch ( keyValuePair.Value.VarType )
 									{
 										case IRacingSdkEnum.VarType.Char:
-											valueAsString = $"         {irsdk.Data.GetChar( keyValuePair.Value.Name, valueIndex )}";
+											valueAsString = $"         {irsdk.Data.GetChar( keyValuePair.Value, valueIndex )}";
 											break;
 
 										case IRacingSdkEnum.VarType.Bool:
-											var valueAsBool = irsdk.Data.GetBool( keyValuePair.Value.Name, valueIndex );
+											var valueAsBool = irsdk.Data.GetBool( keyValuePair.Value, valueIndex );
 											valueAsString = valueAsBool ? "         T" : "         F";
 											brush = valueAsBool ? Brushes.Green : Brushes.Red;
 											break;
 
 										case IRacingSdkEnum.VarType.Int:
-											valueAsString = $"{irsdk.Data.GetInt( keyValuePair.Value.Name, valueIndex ),10:N0}";
+											valueAsString = $"{irsdk.Data.GetInt( keyValuePair.Value, valueIndex ),10:N0}";
 											break;
 
 										case IRacingSdkEnum.VarType.BitField:
-											valueAsString = $"0x{irsdk.Data.GetBitField( keyValuePair.Value.Name, valueIndex ):X8}";
+											valueAsString = $"0x{irsdk.Data.GetBitField( keyValuePair.Value, valueIndex ):X8}";
 
 											switch ( keyValuePair.Value.Unit )
 											{
@@ -355,11 +365,11 @@ namespace IRSDKSharperTest
 											break;
 
 										case IRacingSdkEnum.VarType.Float:
-											valueAsString = $"{irsdk.Data.GetFloat( keyValuePair.Value.Name, valueIndex ),15:N4}";
+											valueAsString = $"{irsdk.Data.GetFloat( keyValuePair.Value, valueIndex ),15:N4}";
 											break;
 
 										case IRacingSdkEnum.VarType.Double:
-											valueAsString = $"{irsdk.Data.GetDouble( keyValuePair.Value.Name, valueIndex ),15:N4}";
+											valueAsString = $"{irsdk.Data.GetDouble( keyValuePair.Value, valueIndex ),15:N4}";
 											break;
 									}
 
@@ -436,13 +446,13 @@ namespace IRSDKSharperTest
 
 			if ( var.VarType == IRacingSdkEnum.VarType.Int )
 			{
-				var enumValue = (T) (object) irsdk.Data.GetInt( var.Name, index );
+				var enumValue = (T) (object) irsdk.Data.GetInt( var, index );
 
 				return enumValue.ToString();
 			}
 			else
 			{
-				var bits = irsdk.Data.GetBitField( var.Name, index );
+				var bits = irsdk.Data.GetBitField( var, index );
 
 				var bitsString = string.Empty;
 
