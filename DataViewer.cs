@@ -256,7 +256,7 @@ namespace IRSDKSharperTest
 								drawingContext.DrawRectangle( Brushes.AliceBlue, null, new Rect( 0, point.Y, ActualWidth, 20 ) );
 							}
 
-							var offset = keyValuePair.Value.Offset + valueIndex * keyValuePair.Value.Bytes;
+							var offset = keyValuePair.Value.Offset + valueIndex * IRacingSdkConst.VarTypeBytes[ (int) keyValuePair.Value.VarType ];
 
 							var formattedText = new FormattedText( offset.ToString(), cultureInfo, FlowDirection.LeftToRight, typeface, 12, Brushes.Black, 1.25f )
 							{
