@@ -133,15 +133,17 @@ namespace IRSDKSharperTest
 				return;
 			}
 
-			if ( irsdk.IsConnected )
+			var sessionInfo = irsdk.Data.SessionInfo;
+
+			if ( irsdk.IsConnected && ( sessionInfo != null ) )
 			{
 				var point = new Point( 10, 10 );
 				var lineIndex = 0;
 				var stopDrawing = false;
 
-				foreach ( var propertyInfo in irsdk.Data.SessionInfo.GetType().GetProperties() )
+				foreach ( var propertyInfo in sessionInfo.GetType().GetProperties() )
 				{
-					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( irsdk.Data.SessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
+					DrawSessionInfo( drawingContext, propertyInfo.Name, propertyInfo.GetValue( sessionInfo ), 0, ref point, ref lineIndex, ref stopDrawing );
 				}
 
 				NumLines = lineIndex;
