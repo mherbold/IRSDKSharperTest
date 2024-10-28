@@ -1,10 +1,11 @@
 ﻿
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
-using HerboldRacing;
+using IRSDKSharper;
 
 namespace IRSDKSharperTest
 {
@@ -12,7 +13,7 @@ namespace IRSDKSharperTest
 	{
 		private int lastTickCount = -1;
 
-		private float[] carIdxLapDistPct = new float[ 64 ];
+		private readonly float[] carIdxLapDistPct = new float[ 64 ];
 
 		public MainWindow()
 		{
@@ -21,7 +22,7 @@ namespace IRSDKSharperTest
 
 		private void UpdateValueLabels()
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			irsdkValueLabel.Content = ( irsdk == null ) ? "irsdk = null" : "irsdk = not null";
 
@@ -46,7 +47,7 @@ namespace IRSDKSharperTest
 
 		private void OnException( Exception exception )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			irsdk?.Stop();
 
@@ -80,7 +81,7 @@ namespace IRSDKSharperTest
 		{
 			RedrawWindow();
 
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( false && ( irsdk != null ) )
 			{
@@ -94,7 +95,7 @@ namespace IRSDKSharperTest
 
 		private void OnTelemetryData()
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( irsdk != null )
 			{
@@ -118,9 +119,14 @@ namespace IRSDKSharperTest
 			} );
 		}
 
+		private void OnDebugLog( string message )
+		{
+			Debug.WriteLine( message );
+		}
+
 		private void RedrawWindow()
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( ( irsdk != null ) && ( irsdk.Data.TickCount != lastTickCount ) )
 			{
@@ -139,7 +145,7 @@ namespace IRSDKSharperTest
 
 		private void Window_Closing( object sender, System.ComponentModel.CancelEventArgs e )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			irsdk?.Stop();
 		}
@@ -184,9 +190,9 @@ namespace IRSDKSharperTest
 
 		private void Create_Click( object sender, RoutedEventArgs e )
 		{
-			Program.IRSDKSharper = new IRSDKSharper();
+			Program.irsdk = new IRacingSdk();
 
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			irsdk.OnException += OnException;
 			irsdk.OnConnected += OnConnected;
@@ -194,17 +200,14 @@ namespace IRSDKSharperTest
 			irsdk.OnSessionInfo += OnSessionInfo;
 			irsdk.OnTelemetryData += OnTelemetryData;
 			irsdk.OnStopped += OnStopped;
-
-			var desktopFolderPath = Environment.GetFolderPath( Environment.SpecialFolder.Desktop );
-
-			irsdk.EnableEventSystem( $"{desktopFolderPath}\\IRSDKSharperTest" );
+			irsdk.OnDebugLog += OnDebugLog;
 
 			UpdateValueLabels();
 		}
 
 		private void Start_Click( object sender, RoutedEventArgs e )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			irsdk?.Start();
 
@@ -213,7 +216,7 @@ namespace IRSDKSharperTest
 
 		private void Stop_Click( object sender, RoutedEventArgs e )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			irsdk?.Stop();
 
@@ -222,7 +225,7 @@ namespace IRSDKSharperTest
 
 		private void IncrementUpdateInterval_Click( object sender, RoutedEventArgs e )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( irsdk != null )
 			{
@@ -234,7 +237,7 @@ namespace IRSDKSharperTest
 
 		private void DecrementUpdateInterval_Click( object sender, RoutedEventArgs e )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( irsdk != null )
 			{
@@ -246,7 +249,7 @@ namespace IRSDKSharperTest
 
 		private void Dispose_Click( object sender, RoutedEventArgs e )
 		{
-			Program.IRSDKSharper = null;
+			Program.irsdk = null;
 
 			UpdateValueLabels();
 		}

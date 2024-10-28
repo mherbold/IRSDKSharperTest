@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-using HerboldRacing;
+using IRSDKSharper;
 
 namespace IRSDKSharperTest
 {
@@ -58,7 +58,7 @@ namespace IRSDKSharperTest
 
 		private void DrawHeaderData( DrawingContext drawingContext )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( irsdk == null )
 			{
@@ -126,7 +126,7 @@ namespace IRSDKSharperTest
 
 		private void DrawSessionInfo( DrawingContext drawingContext )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( irsdk == null )
 			{
@@ -234,7 +234,7 @@ namespace IRSDKSharperTest
 
 		private void DrawTelemetryData( DrawingContext drawingContext )
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( irsdk == null )
 			{
@@ -439,7 +439,7 @@ namespace IRSDKSharperTest
 
 		private static string GetString<T>( IRacingSdkDatum var, int index ) where T : Enum
 		{
-			var irsdk = Program.IRSDKSharper;
+			var irsdk = Program.irsdk;
 
 			if ( irsdk == null )
 			{

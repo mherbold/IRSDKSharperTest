@@ -1,10 +1,10 @@
 ﻿
-using HerboldRacing;
+using IRSDKSharper;
 
 namespace IRSDKSharperTest
 {
 	internal static class Program
 	{
-		public static IRSDKSharper? IRSDKSharper { get; set; }
+		public static IRacingSdk? irsdk { get; set; }
 	}
 }
